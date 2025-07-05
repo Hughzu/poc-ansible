@@ -1,0 +1,66 @@
+---
+- name: "Basic Server Setup"
+  hosts: all
+  become: true
+  
+  tasks:
+    - name: "Test connectivity"
+      ping:
+      
+    - name: "Update package cache"
+      apt:
+        update_cache: true
+      when: ansible_distribution == "Ubuntu"
+      
+    - name: "Install basic packages"
+      apt:
+        name:
+          - curl
+          - wget
+          - git
+          - htop
+        state: present
+      when: ansible_distribution == "Ubuntu"
+      
+    - name: "Show completion message"
+      debug:
+        msg: "Basic setup completed on {{ inventory_hostname }}"
+
+- name: "Web Development Setup"
+  hosts: webdev
+  become: true
+  
+  tasks:
+    - name: "Install web server packages"
+      apt:
+        name:
+          - nginx
+          - php-fpm
+          - mysql-server
+        state: present
+        
+    - name: "Start web services"
+      systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - nginx
+        - php8.1-fpm
+        - mysql
+        
+    - name: "Create simple test page"
+      copy:
+        content: |
+          <html>
+          <head><title>Test Server</title></head>
+          <body>
+          <h1>Hello from {{ inventory_hostname }}!</h1>
+          <p>Web server is working!</p>
+          </body>
+          </html>
+        dest: /var/www/html/index.html
+        
+    - name: "Web setup complete"
+      debug:
+        msg: "Web server ready at http://{{ ansible_host }}"
