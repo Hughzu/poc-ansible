@@ -38,7 +38,7 @@
         state: present
         
     - name: "Start nginx service"
-      systemd:
+      service:
         name: nginx
         state: started
         enabled: true
