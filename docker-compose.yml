@@ -11,7 +11,6 @@ volumes:
   ssh_keys:
 
 services:
-  # Ansible Control Node
   ansible-control:
     image: ubuntu:22.04
     container_name: ansible-control
@@ -40,6 +39,11 @@ services:
       else
         echo '♻️ SSH key pair already exists, reusing...'
       fi &&
+      echo '🔧 Fixing directory permissions for ansible.cfg...' &&
+      chmod 755 /ansible &&
+      chmod 644 /ansible/ansible.cfg &&
+      chmod 644 /ansible/inventory/hosts.yml &&
+      echo '✅ Permissions fixed: ansible.cfg will now be recognized' &&
       echo '🏠 Adding hostname mapping for webdev-01...' &&
       echo '172.20.0.11 webdev-01' >> /etc/hosts &&
       echo '✅ Ansible Control Node setup complete!' &&
@@ -52,7 +56,6 @@ services:
       - webdev-01
     restart: unless-stopped
 
-  # Single Ubuntu Target Server
   webdev-01:
     image: ubuntu:22.04
     container_name: webdev-01
