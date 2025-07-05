@@ -1,0 +1,92 @@
+version: '3.8'
+
+networks:
+  ansible_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+volumes:
+  ssh_keys:
+
+services:
+  # Ansible Control Node
+  ansible-control:
+    image: ubuntu:22.04
+    container_name: ansible-control
+    hostname: ansible-control
+    networks:
+      ansible_network:
+        ipv4_address: 172.20.0.10
+    volumes:
+      - ./ansible:/ansible
+      - ssh_keys:/root/.ssh
+    environment:
+      - ANSIBLE_HOST_KEY_CHECKING=False
+    command: >
+      bash -c "
+      echo '🚀 Starting Ansible Control Node setup...' &&
+      echo '📦 Updating package cache...' &&
+      apt-get update && 
+      echo '📥 Installing required packages (python3, pip, ssh client, etc.)...' &&
+      apt-get install -y python3 python3-pip openssh-client sshpass git vim &&
+      echo '🔧 Installing Ansible via pip...' &&
+      pip3 install ansible &&
+      echo '🔑 Setting up SSH key pair for passwordless access...' &&
+      if [ ! -f /root/.ssh/id_rsa ]; then
+        ssh-keygen -t rsa -b 4096 -f /root/.ssh/id_rsa -N '' -q
+        echo '✨ New SSH key pair generated'
+      else
+        echo '♻️ SSH key pair already exists, reusing...'
+      fi &&
+      echo '🏠 Adding hostname mapping for webdev-01...' &&
+      echo '172.20.0.11 webdev-01' >> /etc/hosts &&
+      echo '✅ Ansible Control Node setup complete!' &&
+      echo '💡 You can now connect with: docker exec -it ansible-control bash' &&
+      echo '🎯 Next: cd /ansible && ansible all -m ping' &&
+      echo '🔗 SSH test: ssh root@webdev-01' &&
+      tail -f /dev/null
+      "
+    depends_on:
+      - webdev-01
+    restart: unless-stopped
+
+  # Single Ubuntu Target Server
+  webdev-01:
+    image: ubuntu:22.04
+    container_name: webdev-01
+    hostname: webdev-01
+    networks:
+      ansible_network:
+        ipv4_address: 172.20.0.11
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    ports:
+      - "8080:80"
+    command: >
+      bash -c "
+      echo '🎯 Starting Ubuntu Target Server setup...' &&
+      echo '📦 Updating package cache...' &&
+      apt-get update &&
+      echo '📥 Installing SSH server, Python3, and sudo...' &&
+      apt-get install -y openssh-server python3 sudo &&
+      echo '📁 Creating SSH daemon directory...' &&
+      mkdir -p /var/run/sshd &&
+      echo '📁 Creating root SSH directory...' &&
+      mkdir -p /root/.ssh &&
+      echo '🔐 Setting root password to: ansible123' &&
+      echo 'root:ansible123' | chpasswd &&
+      echo '⚙️ Configuring SSH: Enabling root login...' &&
+      sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config &&
+      echo '⚙️ Configuring SSH: Enabling password authentication...' &&
+      sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config &&
+      echo '🚀 Starting SSH service...' &&
+      service ssh start &&
+      echo '✅ Ubuntu Target Server ready!' &&
+      echo '📡 SSH server running on port 22' &&
+      echo '🔑 Login: ssh root@172.20.0.11 (password: ansible123)' &&
+      echo '💡 Ready for Ansible connections!' &&
+      tail -f /dev/null
+      "
+    restart: unless-stopped
