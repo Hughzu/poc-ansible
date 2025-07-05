@@ -1,5 +1,4 @@
-# Advanced Ansible Multi-Environment Management Project
-
+# Ansible
 ## Project Overview
 This project demonstrates advanced Ansible automation skills by managing heterogeneous infrastructure using Docker Compose. You'll orchestrate 6 target machines (3 Ubuntu for web development, 3 CentOS for data analytics) from a central Ansible control node, showcasing cross-platform automation, advanced playbook techniques, and enterprise-grade configuration management.
 
