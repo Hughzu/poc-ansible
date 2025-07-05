@@ -7,12 +7,12 @@
     - name: "Test connectivity"
       ping:
       
-    - name: "Update package cache"
+    - name: "Update package cache (Debian/Ubuntu)"
       apt:
         update_cache: true
-      when: ansible_distribution == "Ubuntu"
+      when: ansible_distribution in ["Ubuntu", "Debian"]
       
-    - name: "Install basic packages"
+    - name: "Install basic packages (Debian/Ubuntu)"
       apt:
         name:
           - curl
@@ -20,11 +20,11 @@
           - git
           - htop
         state: present
-      when: ansible_distribution == "Ubuntu"
+      when: ansible_distribution in ["Ubuntu", "Debian"]
       
     - name: "Show completion message"
       debug:
-        msg: "Basic setup completed on {{ inventory_hostname }}"
+        msg: "Basic setup completed on {{ inventory_hostname }} ({{ ansible_distribution }})"
 
 - name: "Web Development Setup"
   hosts: webdev
@@ -35,32 +35,70 @@
       apt:
         name:
           - nginx
-          - php-fpm
-          - mysql-server
         state: present
         
-    - name: "Start web services"
+    - name: "Start nginx service"
       systemd:
-        name: "{{ item }}"
+        name: nginx
         state: started
         enabled: true
-      loop:
-        - nginx
-        - php8.1-fpm
-        - mysql
         
     - name: "Create simple test page"
       copy:
         content: |
           <html>
-          <head><title>Test Server</title></head>
+          <head><title>Test Server - {{ inventory_hostname }}</title></head>
           <body>
           <h1>Hello from {{ inventory_hostname }}!</h1>
           <p>Web server is working!</p>
+          <p>Server IP: {{ ansible_host }}</p>
+          <p>OS: {{ ansible_distribution }} {{ ansible_distribution_version }}</p>
           </body>
           </html>
         dest: /var/www/html/index.html
         
     - name: "Web setup complete"
       debug:
-        msg: "Web server ready at http://{{ ansible_host }}"
+        msg: "Web server ready at http://{{ ansible_host }} (accessible via http://localhost:{{ ansible_port | default('8080') }})"
+
+# - name: "Analytics Environment Setup"
+#   hosts: analytics
+#   become: true
+  
+#   tasks:
+#     - name: "Install Python development packages"
+#       apt:
+#         name:
+#           - python3-pip
+#           - python3-dev
+#           - build-essential
+#         state: present
+        
+#     - name: "Install basic Python data science packages"
+#       pip:
+#         name:
+#           - jupyter
+#           - pandas
+#           - numpy
+#           - matplotlib
+#         executable: pip3
+        
+#     - name: "Create jupyter config directory"
+#       file:
+#         path: /root/.jupyter
+#         state: directory
+#         mode: '0755'
+        
+#     - name: "Create simple jupyter config"
+#       copy:
+#         content: |
+#           c.NotebookApp.ip = '0.0.0.0'
+#           c.NotebookApp.port = 8888
+#           c.NotebookApp.open_browser = False
+#           c.NotebookApp.token = ''
+#           c.NotebookApp.password = ''
+#         dest: /root/.jupyter/jupyter_notebook_config.py
+        
+#     - name: "Analytics setup complete"
+#       debug:
+#         msg: "Analytics server ready on {{ inventory_hostname }} - Jupyter available at http://{{ ansible_host }}:8888"

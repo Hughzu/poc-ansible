@@ -11,6 +11,7 @@ volumes:
   ssh_keys:
 
 services:
+  # Ansible Control Node
   ansible-control:
     image: ubuntu:22.04
     container_name: ansible-control
@@ -44,8 +45,11 @@ services:
       chmod 644 /ansible/ansible.cfg &&
       chmod 644 /ansible/inventory/hosts.yml &&
       echo '✅ Permissions fixed: ansible.cfg will now be recognized' &&
-      echo '🏠 Adding hostname mapping for webdev-01...' &&
+      echo '🏠 Adding hostname mappings for all servers...' &&
       echo '172.20.0.11 webdev-01' >> /etc/hosts &&
+      echo '172.20.0.12 webdev-02' >> /etc/hosts &&
+      echo '172.20.0.21 analytics-01' >> /etc/hosts &&
+      echo '172.20.0.22 analytics-02' >> /etc/hosts &&
       echo '✅ Ansible Control Node setup complete!' &&
       echo '💡 You can now connect with: docker exec -it ansible-control bash' &&
       echo '🎯 Next: cd /ansible && ansible all -m ping' &&
@@ -54,8 +58,12 @@ services:
       "
     depends_on:
       - webdev-01
+      - webdev-02
+      - analytics-01
+      - analytics-02
     restart: unless-stopped
 
+  # Ubuntu Web Development Servers
   webdev-01:
     image: ubuntu:22.04
     container_name: webdev-01
@@ -69,7 +77,7 @@ services:
       - "8080:80"
     command: >
       bash -c "
-      echo '🎯 Starting Ubuntu Target Server setup...' &&
+      echo '🎯 Starting Ubuntu WebDev Server 01 setup...' &&
       echo '📦 Updating package cache...' &&
       apt-get update &&
       echo '📥 Installing SSH server, Python3, and sudo...' &&
@@ -86,9 +94,126 @@ services:
       sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config &&
       echo '🚀 Starting SSH service...' &&
       service ssh start &&
-      echo '✅ Ubuntu Target Server ready!' &&
+      echo '✅ Ubuntu WebDev Server 01 ready!' &&
       echo '📡 SSH server running on port 22' &&
       echo '🔑 Login: ssh root@172.20.0.11 (password: ansible123)' &&
+      echo '💡 Ready for Ansible connections!' &&
+      tail -f /dev/null
+      "
+    restart: unless-stopped
+
+  webdev-02:
+    image: ubuntu:22.04
+    container_name: webdev-02
+    hostname: webdev-02
+    networks:
+      ansible_network:
+        ipv4_address: 172.20.0.12
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    ports:
+      - "8081:80"
+    command: >
+      bash -c "
+      echo '🎯 Starting Ubuntu WebDev Server 02 setup...' &&
+      echo '📦 Updating package cache...' &&
+      apt-get update &&
+      echo '📥 Installing SSH server, Python3, and sudo...' &&
+      apt-get install -y openssh-server python3 sudo &&
+      echo '📁 Creating SSH daemon directory...' &&
+      mkdir -p /var/run/sshd &&
+      echo '📁 Creating root SSH directory...' &&
+      mkdir -p /root/.ssh &&
+      echo '🔐 Setting root password to: ansible123' &&
+      echo 'root:ansible123' | chpasswd &&
+      echo '⚙️ Configuring SSH: Enabling root login...' &&
+      sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config &&
+      echo '⚙️ Configuring SSH: Enabling password authentication...' &&
+      sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config &&
+      echo '🚀 Starting SSH service...' &&
+      service ssh start &&
+      echo '✅ Ubuntu WebDev Server 02 ready!' &&
+      echo '📡 SSH server running on port 22' &&
+      echo '🔑 Login: ssh root@172.20.0.12 (password: ansible123)' &&
+      echo '💡 Ready for Ansible connections!' &&
+      tail -f /dev/null
+      "
+    restart: unless-stopped
+
+  # Debian Data Analytics Servers
+  analytics-01:
+    image: debian:12
+    container_name: analytics-01
+    hostname: analytics-01
+    networks:
+      ansible_network:
+        ipv4_address: 172.20.0.21
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    ports:
+      - "8888:8888"  # Jupyter Lab
+      - "4040:4040"  # Spark UI
+    command: >
+      bash -c "
+      echo '📊 Starting Debian Analytics Server 01 setup...' &&
+      echo '📦 Updating package cache...' &&
+      apt-get update &&
+      echo '📥 Installing SSH server, Python3, and sudo...' &&
+      apt-get install -y openssh-server python3 python3-pip sudo &&
+      echo '📁 Creating SSH daemon directory...' &&
+      mkdir -p /var/run/sshd &&
+      echo '📁 Creating root SSH directory...' &&
+      mkdir -p /root/.ssh &&
+      echo '🔐 Setting root password to: ansible123' &&
+      echo 'root:ansible123' | chpasswd &&
+      echo '⚙️ Configuring SSH: Enabling root login...' &&
+      sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config &&
+      echo '⚙️ Configuring SSH: Enabling password authentication...' &&
+      sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config &&
+      echo '🚀 Starting SSH service...' &&
+      service ssh start &&
+      echo '✅ Debian Analytics Server 01 ready!' &&
+      echo '📡 SSH server running on port 22' &&
+      echo '🔑 Login: ssh root@172.20.0.21 (password: ansible123)' &&
+      echo '💡 Ready for Ansible connections!' &&
+      tail -f /dev/null
+      "
+    restart: unless-stopped
+
+  analytics-02:
+    image: debian:12
+    container_name: analytics-02
+    hostname: analytics-02
+    networks:
+      ansible_network:
+        ipv4_address: 172.20.0.22
+    environment:
+      - DEBIAN_FRONTEND=noninteractive
+    ports:
+      - "8889:8888"  # Jupyter Lab
+      - "4041:4040"  # Spark UI
+    command: >
+      bash -c "
+      echo '📊 Starting Debian Analytics Server 02 setup...' &&
+      echo '📦 Updating package cache...' &&
+      apt-get update &&
+      echo '📥 Installing SSH server, Python3, and sudo...' &&
+      apt-get install -y openssh-server python3 python3-pip sudo &&
+      echo '📁 Creating SSH daemon directory...' &&
+      mkdir -p /var/run/sshd &&
+      echo '📁 Creating root SSH directory...' &&
+      mkdir -p /root/.ssh &&
+      echo '🔐 Setting root password to: ansible123' &&
+      echo 'root:ansible123' | chpasswd &&
+      echo '⚙️ Configuring SSH: Enabling root login...' &&
+      sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config &&
+      echo '⚙️ Configuring SSH: Enabling password authentication...' &&
+      sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config &&
+      echo '🚀 Starting SSH service...' &&
+      service ssh start &&
+      echo '✅ Debian Analytics Server 02 ready!' &&
+      echo '📡 SSH server running on port 22' &&
+      echo '🔑 Login: ssh root@172.20.0.22 (password: ansible123)' &&
       echo '💡 Ready for Ansible connections!' &&
       tail -f /dev/null
       "
