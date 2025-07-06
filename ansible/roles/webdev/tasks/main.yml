@@ -3,12 +3,20 @@
   apt:
     name: "{{ webdev_packages }}"
     state: present
+  tags:
+    - packages
+    - nginx
+    - install
 
 - name: "Start nginx service"
   service:
     name: "{{ webdev_service_name }}"
     state: "{{ webdev_service_state }}"
     enabled: "{{ webdev_service_enabled }}"
+  tags:
+    - services
+    - nginx
+    - start
 
 - name: "Deploy custom index page from template"
   template:
@@ -18,7 +26,15 @@
     group: root
     mode: '0644'
   notify: restart nginx
+  tags:
+    - content
+    - templates
+    - website
+    - config
 
 - name: "Web setup complete"
   debug:
     msg: "Web server ready at http://{{ ansible_host }} (accessible via http://localhost:{{ ansible_port | default(webdev_default_port) }})"
+  tags:
+    - reporting
+    - webdev

@@ -2,17 +2,29 @@
 - name: "Deploy Common Configuration"
   hosts: all
   become: true
+  tags:
+    - common
+    - base
+    - always  # Always runs unless explicitly skipped
   roles:
     - common
 
 - name: "Deploy Web Development Environment"
   hosts: webdev
   become: true
+  tags:
+    - webdev
+    - web
+    - nginx
   roles:
     - webdev
 
 - name: "Deploy Analytics Environment"
   hosts: analytics
   become: true
+  tags:
+    - analytics
+    - jupyter
+    - python
   roles:
     - analytics

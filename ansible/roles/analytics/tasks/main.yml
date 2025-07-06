@@ -3,33 +3,54 @@
   apt:
     name: "{{ analytics_python_packages }}"
     state: present
+  tags:
+    - packages
+    - python
+    - install
 
 - name: "Create analytics virtual environment"
   command: "python3 -m venv {{ analytics_venv_path }}"
   args:
     creates: "{{ analytics_venv_path }}"
+  tags:
+    - python
+    - venv
+    - setup
 
 - name: "Install basic Python data science packages in virtual environment"
   pip:
     name: "{{ analytics_pip_packages }}"
     virtualenv: "{{ analytics_venv_path }}"
+  tags:
+    - python
+    - pip
+    - data-science
+    - install
 
 - name: "Create jupyter config directory"
   file:
     path: "{{ analytics_jupyter_config_dir }}"
     state: directory
     mode: "{{ analytics_jupyter_config_dir_mode }}"
+  tags:
+    - jupyter
+    - config
+    - setup
 
 - name: "Create simple jupyter config"
   copy:
     content: |
       c.ServerApp.ip = '{{ analytics_jupyter_ip }}'
       c.ServerApp.port = {{ analytics_jupyter_port }}
-      c.ServerApp.open_browser = {{ analytics_jupyter_open_browser }}
+      c.ServerApp.open_browser = {{ analytics_jupyter_open_browser }}'
       c.ServerApp.token = '{{ analytics_jupyter_token }}'
       c.ServerApp.password = '{{ analytics_jupyter_password }}'
       c.ServerApp.allow_root = {{ analytics_jupyter_allow_root }}
     dest: "{{ analytics_jupyter_config_dir }}/{{ analytics_jupyter_config_file }}"
+  tags:
+    - jupyter
+    - config
+    - templates
 
 - name: "Create startup script for Jupyter"
   copy:
@@ -40,6 +61,10 @@
       jupyter lab --config={{ analytics_jupyter_config_dir }}/{{ analytics_jupyter_config_file }}
     dest: "{{ analytics_startup_script_path }}"
     mode: "{{ analytics_script_mode }}"
+  tags:
+    - jupyter
+    - scripts
+    - config
 
 - name: "Create analytics environment activation script"
   copy:
@@ -52,7 +77,14 @@
       echo "Python packages available: {{ analytics_pip_packages | join(', ') }}"
     dest: "{{ analytics_activation_script_path }}"
     mode: "{{ analytics_script_mode }}"
+  tags:
+    - scripts
+    - config
+    - setup
 
 - name: "Analytics setup complete"
   debug:
     msg: "Analytics server ready on {{ inventory_hostname }} - Run '{{ analytics_startup_script_path }}' to start Jupyter Lab on port {{ analytics_jupyter_port }}"
+  tags:
+    - reporting
+    - analytics

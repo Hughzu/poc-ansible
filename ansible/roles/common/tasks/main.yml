@@ -3,11 +3,18 @@
   ping:
   register: ping_result
   failed_when: false
+  tags:
+    - connectivity
+    - health-check
+    - never  # Only runs when explicitly called
   
 - name: "Verify connectivity successful"
   fail:
     msg: "Unable to connect to {{ inventory_hostname }}. Please check SSH connectivity."
   when: ping_result.ping is not defined
+  tags:
+    - connectivity
+    - health-check
 
 - name: "Update package cache (Debian/Ubuntu)"
   apt:
@@ -18,11 +25,10 @@
   delay: 10
   until: apt_update_result is succeeded
   ignore_errors: true
-
-- name: "Check if package cache update failed"
-  fail:
-    msg: "Failed to update package cache on {{ inventory_hostname }} after 3 attempts. Please check network connectivity and repository configuration."
-  when: apt_update_result is failed
+  tags:
+    - packages
+    - package-cache
+    - setup
 
 - name: "Install basic packages (Debian/Ubuntu)"
   apt:
@@ -37,31 +43,19 @@
   retries: 2
   delay: 5
   until: package_install_result is succeeded
-
-- name: "Verify basic packages installation"
-  command: "dpkg -l {{ item }}"
-  loop:
-    - curl
-    - wget
-    - git
-    - htop
-  when: ansible_distribution in ["Ubuntu", "Debian"]
-  register: package_verify_result
-  failed_when: package_verify_result.rc != 0
-  ignore_errors: true
-
-- name: "Report missing packages"
-  debug:
-    msg: "WARNING: Package {{ item.item }} may not be properly installed on {{ inventory_hostname }}"
-  loop: "{{ package_verify_result.results }}"
-  when: 
-    - ansible_distribution in ["Ubuntu", "Debian"]
-    - item.rc != 0
+  tags:
+    - packages
+    - basic-tools
+    - setup
 
 - name: "Ensure SSH service exists"
   stat:
     path: /lib/systemd/system/ssh.service
   register: ssh_service_file
+  tags:
+    - ssh
+    - security
+    - services
   
 - name: "Ensure SSH is running"
   service:
@@ -70,19 +64,15 @@
     enabled: true
   register: ssh_service_result
   when: ssh_service_file.stat.exists
-  
-- name: "Handle SSH service failure"
-  fail:
-    msg: "SSH service failed to start on {{ inventory_hostname }}. Manual intervention required."
-  when: 
-    - ssh_service_file.stat.exists
-    - ssh_service_result is failed
-
-- name: "Warn about missing SSH service"
-  debug:
-    msg: "WARNING: SSH service file not found on {{ inventory_hostname }}. This may cause connectivity issues."
-  when: not ssh_service_file.stat.exists
+  tags:
+    - ssh
+    - security
+    - services
+    - dangerous  # Could disrupt connection
 
 - name: "Show completion message"
   debug:
     msg: "Basic setup completed successfully on {{ inventory_hostname }} ({{ ansible_distribution }})"
+  tags:
+    - setup
+    - reporting

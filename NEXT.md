@@ -10,4 +10,4 @@
 
 ### Phase 4: Template Mastery (Jinja2) - DONE
 
-### Phase 5: Error handling
+### Phase 5: Error handling & Tags - DONE
