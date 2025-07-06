@@ -1,0 +1,38 @@
+---
+# Python development packages to install
+analytics_python_packages:
+  - python3-pip
+  - python3-dev
+  - python3-full
+  - python3-venv
+  - build-essential
+
+# Virtual environment configuration
+analytics_venv_path: /opt/analytics-env
+
+# Python data science packages for virtual environment
+analytics_pip_packages:
+  - jupyter
+  - pandas
+  - numpy
+  - matplotlib
+  - jupyterlab
+
+# Jupyter configuration
+analytics_jupyter_config_dir: /root/.jupyter
+analytics_jupyter_config_dir_mode: '0755'
+analytics_jupyter_config_file: jupyter_lab_config.py
+analytics_jupyter_ip: '0.0.0.0'
+analytics_jupyter_port: 8888
+analytics_jupyter_open_browser: False
+analytics_jupyter_token: ''
+analytics_jupyter_password: ''
+analytics_jupyter_allow_root: True
+
+# Script paths and permissions
+analytics_startup_script_path: /usr/local/bin/start-jupyter
+analytics_activation_script_path: /usr/local/bin/activate-analytics
+analytics_script_mode: '0755'
+
+# Working directory for Jupyter
+analytics_jupyter_workdir: /root

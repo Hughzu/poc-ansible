@@ -4,7 +4,7 @@
 
 ### Phase 1: Role Expertise - DONE 
 
-### Phase 2: Variable Expertise
+### Phase 2: Variable Expertise - DONE
 
 ### Phase 3: Security & Vault
 

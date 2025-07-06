@@ -1,0 +1,16 @@
+---
+# Web server packages to install
+webdev_packages:
+  - nginx
+
+# Web server service configuration
+webdev_service_name: nginx
+webdev_service_state: started
+webdev_service_enabled: true
+
+# Web content configuration
+webdev_document_root: /var/www/html
+webdev_index_file: index.html
+
+# Default port for accessibility message
+webdev_default_port: '8080'

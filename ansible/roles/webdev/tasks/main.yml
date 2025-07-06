@@ -1,15 +1,14 @@
 ---
 - name: "Install web server packages"
   apt:
-    name:
-      - nginx
+    name: "{{ webdev_packages }}"
     state: present
 
 - name: "Start nginx service"
   service:
-    name: nginx
-    state: started
-    enabled: true
+    name: "{{ webdev_service_name }}"
+    state: "{{ webdev_service_state }}"
+    enabled: "{{ webdev_service_enabled }}"
 
 - name: "Create simple test page"
   copy:
@@ -23,8 +22,8 @@
       <p>OS: {{ ansible_distribution }} {{ ansible_distribution_version }}</p>
       </body>
       </html>
-    dest: /var/www/html/index.html
+    dest: "{{ webdev_document_root }}/{{ webdev_index_file }}"
 
 - name: "Web setup complete"
   debug:
-    msg: "Web server ready at http://{{ ansible_host }} (accessible via http://localhost:{{ ansible_port | default('8080') }})"
+    msg: "Web server ready at http://{{ ansible_host }} (accessible via http://localhost:{{ ansible_port | default(webdev_default_port) }})"
