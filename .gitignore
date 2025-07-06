@@ -1,2 +1,3 @@
 ansible/ansible.log
 .vscode/
+ansible/.vault_password
