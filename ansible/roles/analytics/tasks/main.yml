@@ -6,12 +6,6 @@
       - python3-venv
     state: present
 
-- name: "Allow Jupyter port through firewall"
-  ufw:
-    rule: allow
-    port: "8888"
-    proto: tcp
-
 - name: "Install Jupyter"
   pip:
     name: jupyter

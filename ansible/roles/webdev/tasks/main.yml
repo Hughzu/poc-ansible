@@ -4,12 +4,6 @@
     name: nginx
     state: present
 
-- name: "Allow HTTP through firewall"
-  ufw:
-    rule: allow
-    port: "80"
-    proto: tcp
-
 - name: "Start NGINX"
   service:
     name: nginx

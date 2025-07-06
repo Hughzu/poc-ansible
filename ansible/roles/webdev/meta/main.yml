@@ -6,4 +6,3 @@ galaxy_info:
 
 dependencies:
   - role: common
-  - role: security
