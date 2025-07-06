@@ -1,0 +1,27 @@
+---
+- name: "Install Python packages"
+  package:
+    name:
+      - python3-pip
+      - python3-venv
+    state: present
+
+- name: "Allow Jupyter port through firewall"
+  ufw:
+    rule: allow
+    port: "8888"
+    proto: tcp
+
+- name: "Install Jupyter"
+  pip:
+    name: jupyter
+    state: present
+
+- name: "Create simple start script"
+  copy:
+    content: |
+      #!/bin/bash
+      cd /root
+      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+    dest: /usr/local/bin/start-jupyter
+    mode: '0755'

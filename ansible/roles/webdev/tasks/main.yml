@@ -1,0 +1,24 @@
+---
+- name: "Install NGINX"
+  package:
+    name: nginx
+    state: present
+
+- name: "Allow HTTP through firewall"
+  ufw:
+    rule: allow
+    port: "80"
+    proto: tcp
+
+- name: "Start NGINX"
+  service:
+    name: nginx
+    state: started
+    enabled: true
+
+- name: "Create simple index page"
+  copy:
+    content: |
+      <h1>{{ inventory_hostname }} - Web Server</h1>
+      <p>NGINX is working!</p>
+    dest: /var/www/html/index.html

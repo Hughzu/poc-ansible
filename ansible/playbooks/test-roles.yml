@@ -1,0 +1,12 @@
+---
+- name: "Test WebDev Roles"
+  hosts: webdev
+  become: true
+  roles:
+    - webdev
+
+- name: "Test Analytics Roles"
+  hosts: analytics
+  become: true
+  roles:
+    - analytics
