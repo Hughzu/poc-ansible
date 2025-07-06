@@ -1,20 +1,28 @@
 ---
-- name: "Update package cache"
+- name: "Test connectivity"
+  ping:
+
+- name: "Update package cache (Debian/Ubuntu)"
   apt:
     update_cache: true
-  when: ansible_os_family == "Debian"
+  when: ansible_distribution in ["Ubuntu", "Debian"]
 
-- name: "Install basic packages"
-  package:
+- name: "Install basic packages (Debian/Ubuntu)"
+  apt:
     name:
       - curl
       - wget
       - git
       - htop
     state: present
+  when: ansible_distribution in ["Ubuntu", "Debian"]
 
 - name: "Ensure SSH is running"
   service:
     name: ssh
     state: started
     enabled: true
+
+- name: "Show completion message"
+  debug:
+    msg: "Basic setup completed on {{ inventory_hostname }} ({{ ansible_distribution }})"

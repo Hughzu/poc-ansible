@@ -1,18 +1,30 @@
 ---
-- name: "Install NGINX"
-  package:
-    name: nginx
+- name: "Install web server packages"
+  apt:
+    name:
+      - nginx
     state: present
 
-- name: "Start NGINX"
+- name: "Start nginx service"
   service:
     name: nginx
     state: started
     enabled: true
 
-- name: "Create simple index page"
+- name: "Create simple test page"
   copy:
     content: |
-      <h1>{{ inventory_hostname }} - Web Server</h1>
-      <p>NGINX is working!</p>
+      <html>
+      <head><title>Test Server - {{ inventory_hostname }}</title></head>
+      <body>
+      <h1>Hello from {{ inventory_hostname }}!</h1>
+      <p>Web server is working!</p>
+      <p>Server IP: {{ ansible_host }}</p>
+      <p>OS: {{ ansible_distribution }} {{ ansible_distribution_version }}</p>
+      </body>
+      </html>
     dest: /var/www/html/index.html
+
+- name: "Web setup complete"
+  debug:
+    msg: "Web server ready at http://{{ ansible_host }} (accessible via http://localhost:{{ ansible_port | default('8080') }})"

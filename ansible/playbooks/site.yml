@@ -1,135 +1,18 @@
 ---
-- name: "Basic Server Setup"
+- name: "Deploy Common Configuration"
   hosts: all
   become: true
-  
-  tasks:
-    - name: "Test connectivity"
-      ping:
-      
-    - name: "Update package cache (Debian/Ubuntu)"
-      apt:
-        update_cache: true
-      when: ansible_distribution in ["Ubuntu", "Debian"]
-      
-    - name: "Install basic packages (Debian/Ubuntu)"
-      apt:
-        name:
-          - curl
-          - wget
-          - git
-          - htop
-        state: present
-      when: ansible_distribution in ["Ubuntu", "Debian"]
-      
-    - name: "Show completion message"
-      debug:
-        msg: "Basic setup completed on {{ inventory_hostname }} ({{ ansible_distribution }})"
+  roles:
+    - common
 
-- name: "Web Development Setup"
+- name: "Deploy Web Development Environment"
   hosts: webdev
   become: true
-  
-  tasks:
-    - name: "Install web server packages"
-      apt:
-        name:
-          - nginx
-        state: present
-        
-    - name: "Start nginx service"
-      service:
-        name: nginx
-        state: started
-        enabled: true
-        
-    - name: "Create simple test page"
-      copy:
-        content: |
-          <html>
-          <head><title>Test Server - {{ inventory_hostname }}</title></head>
-          <body>
-          <h1>Hello from {{ inventory_hostname }}!</h1>
-          <p>Web server is working!</p>
-          <p>Server IP: {{ ansible_host }}</p>
-          <p>OS: {{ ansible_distribution }} {{ ansible_distribution_version }}</p>
-          </body>
-          </html>
-        dest: /var/www/html/index.html
-        
-    - name: "Web setup complete"
-      debug:
-        msg: "Web server ready at http://{{ ansible_host }} (accessible via http://localhost:{{ ansible_port | default('8080') }})"
+  roles:
+    - webdev
 
-- name: "Analytics Environment Setup"
+- name: "Deploy Analytics Environment"
   hosts: analytics
   become: true
-  
-  tasks:
-    - name: "Install Python development packages"
-      apt:
-        name:
-          - python3-pip
-          - python3-dev
-          - python3-full
-          - python3-venv
-          - build-essential
-        state: present
-        
-    - name: "Create analytics virtual environment"
-      command: python3 -m venv /opt/analytics-env
-      args:
-        creates: /opt/analytics-env
-        
-    - name: "Install basic Python data science packages in virtual environment"
-      pip:
-        name:
-          - jupyter
-          - pandas
-          - numpy
-          - matplotlib
-          - jupyterlab
-        virtualenv: /opt/analytics-env
-        
-    - name: "Create jupyter config directory"
-      file:
-        path: /root/.jupyter
-        state: directory
-        mode: '0755'
-        
-    - name: "Create simple jupyter config"
-      copy:
-        content: |
-          c.ServerApp.ip = '0.0.0.0'
-          c.ServerApp.port = 8888
-          c.ServerApp.open_browser = False
-          c.ServerApp.token = ''
-          c.ServerApp.password = ''
-          c.ServerApp.allow_root = True
-        dest: /root/.jupyter/jupyter_lab_config.py
-        
-    - name: "Create startup script for Jupyter"
-      copy:
-        content: |
-          #!/bin/bash
-          cd /root
-          source /opt/analytics-env/bin/activate
-          jupyter lab --config=/root/.jupyter/jupyter_lab_config.py
-        dest: /usr/local/bin/start-jupyter
-        mode: '0755'
-        
-    - name: "Create analytics environment activation script"
-      copy:
-        content: |
-          #!/bin/bash
-          source /opt/analytics-env/bin/activate
-          echo "Analytics environment activated!"
-          echo "To start Jupyter Lab: /usr/local/bin/start-jupyter"
-          echo "Or run: jupyter lab --config=/root/.jupyter/jupyter_lab_config.py"
-          echo "Python packages available: jupyter, pandas, numpy, matplotlib"
-        dest: /usr/local/bin/activate-analytics
-        mode: '0755'
-        
-    - name: "Analytics setup complete"
-      debug:
-        msg: "Analytics server ready on {{ inventory_hostname }} - Run '/usr/local/bin/start-jupyter' to start Jupyter Lab on port 8888"
+  roles:
+    - analytics
