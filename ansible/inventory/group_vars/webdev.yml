@@ -1,4 +1,3 @@
----
 # Web server packages to install
 webdev_packages:
   - nginx
@@ -14,3 +13,7 @@ webdev_index_file: index.html
 
 # Default port for accessibility message
 webdev_default_port: '8080'
+
+# Template variables
+webdev_page_title: "Development Web Server"
+webdev_custom_message: "Welcome to the development environment!"

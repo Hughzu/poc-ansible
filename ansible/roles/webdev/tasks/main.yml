@@ -10,19 +10,14 @@
     state: "{{ webdev_service_state }}"
     enabled: "{{ webdev_service_enabled }}"
 
-- name: "Create simple test page"
-  copy:
-    content: |
-      <html>
-      <head><title>Test Server - {{ inventory_hostname }}</title></head>
-      <body>
-      <h1>Hello from {{ inventory_hostname }}!</h1>
-      <p>Web server is working!</p>
-      <p>Server IP: {{ ansible_host }}</p>
-      <p>OS: {{ ansible_distribution }} {{ ansible_distribution_version }}</p>
-      </body>
-      </html>
+- name: "Deploy custom index page from template"
+  template:
+    src: index.html.j2
     dest: "{{ webdev_document_root }}/{{ webdev_index_file }}"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nginx
 
 - name: "Web setup complete"
   debug:
